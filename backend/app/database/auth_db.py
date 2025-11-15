@@ -8,11 +8,16 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-DB_PATH = "users.db"
+# Use absolute path relative to backend folder
+from pathlib import Path
+DB_DIR = Path(__file__).parent.parent.parent
+DB_PATH = DB_DIR / "users.db"
 
 def init_auth_db():
     """Initialize authentication database"""
-    conn = sqlite3.connect(DB_PATH)
+    # Ensure directory exists
+    DB_DIR.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(str(DB_PATH), check_same_thread=False)
     cursor = conn.cursor()
     
     # Users table
@@ -23,10 +28,17 @@ def init_auth_db():
             email TEXT UNIQUE NOT NULL,
             password_hash TEXT NOT NULL,
             full_name TEXT,
+            role TEXT DEFAULT 'user',
             created_at TEXT NOT NULL,
             updated_at TEXT NOT NULL
         )
     ''')
+    
+    # Add role column if not exists (for existing databases)
+    try:
+        cursor.execute('ALTER TABLE users ADD COLUMN role TEXT DEFAULT "user"')
+    except sqlite3.OperationalError:
+        pass  # Column already exists
     
     # Shopping cart table
     cursor.execute('''
@@ -76,16 +88,16 @@ def hash_password(password: str) -> str:
 def create_user(username: str, email: str, password: str, full_name: str = "") -> Dict:
     """Create new user"""
     try:
-        conn = sqlite3.connect(DB_PATH)
+        conn = sqlite3.connect(str(DB_PATH), check_same_thread=False)
         cursor = conn.cursor()
         
         password_hash = hash_password(password)
         now = datetime.now().isoformat()
         
         cursor.execute('''
-            INSERT INTO users (username, email, password_hash, full_name, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?)
-        ''', (username, email, password_hash, full_name, now, now))
+            INSERT INTO users (username, email, password_hash, full_name, role, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', (username, email, password_hash, full_name, 'user', now, now))
         
         user_id = cursor.lastrowid
         conn.commit()
@@ -106,13 +118,13 @@ def create_user(username: str, email: str, password: str, full_name: str = "") -
 def verify_user(username: str, password: str) -> Optional[Dict]:
     """Verify user credentials"""
     try:
-        conn = sqlite3.connect(DB_PATH)
+        conn = sqlite3.connect(str(DB_PATH), check_same_thread=False)
         cursor = conn.cursor()
         
         password_hash = hash_password(password)
         
         cursor.execute('''
-            SELECT id, username, email, full_name FROM users
+            SELECT id, username, email, full_name, role FROM users
             WHERE username = ? AND password_hash = ?
         ''', (username, password_hash))
         
@@ -124,7 +136,8 @@ def verify_user(username: str, password: str) -> Optional[Dict]:
                 "id": user[0],
                 "username": user[1],
                 "email": user[2],
-                "full_name": user[3]
+                "full_name": user[3],
+                "role": user[4] if len(user) > 4 else "user"
             }
         return None
     except Exception as e:
@@ -134,11 +147,11 @@ def verify_user(username: str, password: str) -> Optional[Dict]:
 def get_user_by_id(user_id: int) -> Optional[Dict]:
     """Get user by ID"""
     try:
-        conn = sqlite3.connect(DB_PATH)
+        conn = sqlite3.connect(str(DB_PATH), check_same_thread=False)
         cursor = conn.cursor()
         
         cursor.execute('''
-            SELECT id, username, email, full_name FROM users
+            SELECT id, username, email, full_name, role FROM users
             WHERE id = ?
         ''', (user_id,))
         
@@ -150,7 +163,8 @@ def get_user_by_id(user_id: int) -> Optional[Dict]:
                 "id": user[0],
                 "username": user[1],
                 "email": user[2],
-                "full_name": user[3]
+                "full_name": user[3],
+                "role": user[4] if len(user) > 4 else "user"
             }
         return None
     except Exception as e:
@@ -161,7 +175,7 @@ def get_user_by_id(user_id: int) -> Optional[Dict]:
 def add_to_cart(user_id: int, product_id: str, quantity: int = 1) -> Dict:
     """Add product to cart"""
     try:
-        conn = sqlite3.connect(DB_PATH)
+        conn = sqlite3.connect(str(DB_PATH), check_same_thread=False)
         cursor = conn.cursor()
         
         # Check if item already in cart
@@ -196,7 +210,7 @@ def add_to_cart(user_id: int, product_id: str, quantity: int = 1) -> Dict:
 def get_cart_items(user_id: int) -> list:
     """Get user's cart items"""
     try:
-        conn = sqlite3.connect(DB_PATH)
+        conn = sqlite3.connect(str(DB_PATH), check_same_thread=False)
         cursor = conn.cursor()
         
         cursor.execute('''
@@ -224,7 +238,7 @@ def get_cart_items(user_id: int) -> list:
 def update_cart_item(user_id: int, product_id: str, quantity: int) -> Dict:
     """Update cart item quantity"""
     try:
-        conn = sqlite3.connect(DB_PATH)
+        conn = sqlite3.connect(str(DB_PATH), check_same_thread=False)
         cursor = conn.cursor()
         
         if quantity <= 0:
@@ -248,7 +262,7 @@ def update_cart_item(user_id: int, product_id: str, quantity: int) -> Dict:
 def clear_cart(user_id: int) -> Dict:
     """Clear user's cart"""
     try:
-        conn = sqlite3.connect(DB_PATH)
+        conn = sqlite3.connect(str(DB_PATH), check_same_thread=False)
         cursor = conn.cursor()
         
         cursor.execute('DELETE FROM cart_items WHERE user_id = ?', (user_id,))
@@ -259,5 +273,34 @@ def clear_cart(user_id: int) -> Dict:
     except Exception as e:
         return {"success": False, "error": str(e)}
 
+def create_admin_if_not_exists():
+    """Create default admin account if not exists"""
+    try:
+        conn = sqlite3.connect(str(DB_PATH), check_same_thread=False)
+        cursor = conn.cursor()
+        
+        # Check if admin exists
+        cursor.execute('SELECT id FROM users WHERE username = ?', ('admin',))
+        if cursor.fetchone():
+            logger.info("Admin account already exists")
+            conn.close()
+            return
+        
+        # Create admin
+        password_hash = hash_password('admin')
+        now = datetime.now().isoformat()
+        
+        cursor.execute('''
+            INSERT INTO users (username, email, password_hash, full_name, role, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', ('admin', 'admin@skincare.com', password_hash, 'Administrator', 'admin', now, now))
+        
+        conn.commit()
+        conn.close()
+        logger.info("✅ Admin account created (username: admin, password: admin)")
+    except Exception as e:
+        logger.error(f"Failed to create admin: {e}")
+
 # Initialize database on import
 init_auth_db()
+create_admin_if_not_exists()

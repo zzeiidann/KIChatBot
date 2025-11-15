@@ -1,5 +1,5 @@
 # app/routes/auth.py
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, status, Form
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, EmailStr
 from typing import Optional
@@ -24,10 +24,6 @@ class RegisterRequest(BaseModel):
     email: EmailStr
     password: str
     full_name: Optional[str] = ""
-
-class LoginRequest(BaseModel):
-    username: str
-    password: str
 
 class AuthResponse(BaseModel):
     success: bool
@@ -127,11 +123,14 @@ async def register(request: RegisterRequest):
         logger.error(f"Register error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/login", response_model=AuthResponse)
-async def login(request: LoginRequest):
-    """User login"""
+@router.post("/login")
+async def login(
+    username: str = Form(...),
+    password: str = Form(...)
+):
+    """User login - accepts form data"""
     try:
-        user = verify_user(request.username, request.password)
+        user = verify_user(username, password)
         
         if not user:
             raise HTTPException(
@@ -141,16 +140,22 @@ async def login(request: LoginRequest):
         
         # Create token
         access_token = create_access_token(
-            data={"user_id": user["id"], "username": user["username"]}
+            data={"user_id": user["id"], "username": user["username"], "role": user.get("role", "user")}
         )
         
-        return AuthResponse(
-            success=True,
-            message="Login berhasil!",
-            access_token=access_token,
-            token_type="bearer",
-            user=user
-        )
+        return {
+            "success": True,
+            "message": "Login berhasil!",
+            "access_token": access_token,
+            "token_type": "bearer",
+            "user": {
+                "id": user["id"],
+                "username": user["username"],
+                "email": user["email"],
+                "full_name": user.get("full_name", ""),
+                "role": user.get("role", "user")
+            }
+        }
         
     except HTTPException:
         raise

@@ -70,12 +70,14 @@ try:
     from app.routes.chat import router as chat_router
     from app.routes.auth import router as auth_router
     from app.routes.products import router as products_router
+    from app.routes.admin import router as admin_router
     
     # Register dengan prefix API v1
     app.include_router(predict_router, prefix="/api/v1", tags=["prediction"])
     app.include_router(chat_router, prefix="/api/v1", tags=["chat"])
     app.include_router(auth_router, prefix="/api/v1/auth", tags=["authentication"])
     app.include_router(products_router, prefix="/api/v1", tags=["products"])
+    app.include_router(admin_router, prefix="/api/v1/admin", tags=["admin"])
     
     # Juga register tanpa prefix untuk compatibility
     app.include_router(predict_router, tags=["prediction-legacy"])
@@ -92,6 +94,7 @@ try:
     logger.info("   - GET  /api/v1/products")
     logger.info("   - POST /api/v1/cart/add")
     logger.info("   - GET  /api/v1/cart")
+    logger.info("   - GET  /api/v1/admin/debug/* (Admin Only)")
     
 except Exception as e:
     logger.error(f" Routes loading failed: {e}")

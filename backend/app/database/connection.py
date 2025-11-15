@@ -7,11 +7,14 @@ def get_db():
     """
     Get database connection
     """
-    # Database path
+    # Database path - gunakan folder backend untuk database
     db_path = Path(__file__).parent.parent.parent / "database.db"
     
+    # Ensure parent directory exists
+    db_path.parent.mkdir(parents=True, exist_ok=True)
+    
     # Create connection
-    conn = sqlite3.connect(str(db_path))
+    conn = sqlite3.connect(str(db_path), check_same_thread=False)
     conn.row_factory = sqlite3.Row  # This enables column access by name
     
     return conn
