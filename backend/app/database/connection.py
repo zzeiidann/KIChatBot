@@ -56,7 +56,7 @@ def init_db():
             VALUES (?, ?, ?, ?, ?)
         ''', sample_products)
         
-        print("✅ Database initialized dengan 8 produk")
+        print(" Database initialized dengan 8 produk")
     
     conn.commit()
     conn.close()

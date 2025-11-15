@@ -17,17 +17,17 @@ async def lifespan(app: FastAPI):
         try:
             from app.database.connection import init_db
             init_db()
-            logger.info("✅ Database initialized")
+            logger.info(" Database initialized")
         except ImportError:
             logger.info("ℹ️ No database configured")
         
         # Pre-load AI model
         from app.models.ai_model import skin_model
         skin_model._ensure_loaded()
-        logger.info("✅ AI model pre-loaded")
+        logger.info(" AI model pre-loaded")
         
     except Exception as e:
-        logger.error(f"❌ Startup error: {e}")
+        logger.error(f" Startup error: {e}")
     
     yield
     # Shutdown would go here
@@ -68,24 +68,33 @@ try:
     # Import routers
     from app.routes.predict import router as predict_router
     from app.routes.chat import router as chat_router
+    from app.routes.auth import router as auth_router
+    from app.routes.products import router as products_router
     
     # Register dengan prefix API v1
     app.include_router(predict_router, prefix="/api/v1", tags=["prediction"])
     app.include_router(chat_router, prefix="/api/v1", tags=["chat"])
+    app.include_router(auth_router, prefix="/api/v1/auth", tags=["authentication"])
+    app.include_router(products_router, prefix="/api/v1", tags=["products"])
     
     # Juga register tanpa prefix untuk compatibility
     app.include_router(predict_router, tags=["prediction-legacy"])
     app.include_router(chat_router, tags=["chat-legacy"])
     
-    logger.info("✅ All routes loaded successfully")
-    logger.info("📌 Available endpoints:")
+    logger.info(" All routes loaded successfully")
+    logger.info(" Available endpoints:")
     logger.info("   - POST /api/v1/predict")
     logger.info("   - POST /predict") 
     logger.info("   - POST /api/v1/chat")
     logger.info("   - POST /chat")
+    logger.info("   - POST /api/v1/auth/register")
+    logger.info("   - POST /api/v1/auth/login")
+    logger.info("   - GET  /api/v1/products")
+    logger.info("   - POST /api/v1/cart/add")
+    logger.info("   - GET  /api/v1/cart")
     
 except Exception as e:
-    logger.error(f"❌ Routes loading failed: {e}")
+    logger.error(f" Routes loading failed: {e}")
     raise e
 
 # Debug endpoint untuk melihat semua routes

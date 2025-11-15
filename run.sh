@@ -1,0 +1,212 @@
+#!/bin/bash
+
+# KIChatBot - All Services Startup Script
+# Runs: Backend (Conda), Ollama, and Frontend
+
+set -e
+
+# Colors for output
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
+# Get script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
+# Check if conda is available
+if ! command -v conda &> /dev/null; then
+    echo -e "${RED}ERROR: Conda not found! Please install Miniconda or Anaconda.${NC}"
+    exit 1
+fi
+
+# Check if conda environment exists
+if ! conda env list | grep -q "kichatbot"; then
+    echo -e "${YELLOW}WARNING: Conda environment 'kichatbot' not found!${NC}"
+    echo -e "${BLUE}Creating conda environment...${NC}"
+    conda create -n kichatbot python=3.11 pytorch torchvision -c pytorch -y
+    conda run -n kichatbot pip install -r backend/requirements.txt
+    echo -e "${GREEN}SUCCESS: Conda environment created${NC}"
+fi
+
+# Check if ollama is installed
+if ! command -v ollama &> /dev/null; then
+    echo -e "${YELLOW}WARNING: Ollama not found!${NC}"
+    echo -e "${BLUE}Please install Ollama from: https://ollama.ai${NC}"
+    echo -e "${BLUE}Or install via: brew install ollama${NC}"
+    read -p "Press Enter to continue without Ollama (chatbot will not work)..."
+    SKIP_OLLAMA=true
+else
+    SKIP_OLLAMA=false
+fi
+
+# Check if Node.js is installed
+if ! command -v npm &> /dev/null; then
+    echo -e "${RED}ERROR: Node.js/npm not found! Please install Node.js.${NC}"
+    exit 1
+fi
+
+# Function to cleanup on exit
+cleanup() {
+    echo ""
+    echo -e "${YELLOW}Shutting down services...${NC}"
+    
+    # Kill all background jobs
+    jobs -p | xargs -r kill 2>/dev/null
+    
+    echo -e "${GREEN}All services stopped${NC}"
+    exit 0
+}
+
+trap cleanup SIGINT SIGTERM
+
+# Create log directory
+mkdir -p logs
+
+echo -e "${BLUE}========================================${NC}"
+echo -e "${GREEN}Starting services...${NC}"
+echo -e "${BLUE}========================================${NC}"
+echo ""
+
+# 1. Start Ollama (if available)
+if [ "$SKIP_OLLAMA" = false ]; then
+    echo -e "${BLUE}[1/3] Starting Ollama server...${NC}"
+    
+    # Check if ollama is already running
+    if pgrep -x "ollama" > /dev/null; then
+        echo -e "${YELLOW}      Ollama already running${NC}"
+    else
+        ollama serve > logs/ollama.log 2>&1 &
+        OLLAMA_PID=$!
+        sleep 2
+        
+        # Check if ollama started successfully
+        if pgrep -x "ollama" > /dev/null; then
+            echo -e "${GREEN}      Ollama started (PID: $OLLAMA_PID)${NC}"
+            echo -e "${BLUE}      Logs: logs/ollama.log${NC}"
+            
+            # Pull llama3.2 if not exists
+            echo -e "${BLUE}      Checking for llama3.2 model...${NC}"
+            if ! ollama list | grep -q "llama3.2"; then
+                echo -e "${BLUE}      Pulling llama3.2 model (this may take a while)...${NC}"
+                ollama pull llama3.2 > logs/ollama-pull.log 2>&1 &
+                echo -e "${YELLOW}      Model pulling in background, check logs/ollama-pull.log${NC}"
+            else
+                echo -e "${GREEN}      llama3.2 model ready${NC}"
+            fi
+        else
+            echo -e "${RED}      Failed to start Ollama${NC}"
+            SKIP_OLLAMA=true
+        fi
+    fi
+else
+    echo -e "${YELLOW}[1/3] Skipping Ollama (chatbot will not work)${NC}"
+fi
+echo ""
+
+# 2. Start Backend (FastAPI with Conda)
+echo -e "${BLUE}[2/3] Starting Backend (FastAPI + Conda)...${NC}"
+cd backend
+conda run -n kichatbot --no-capture-output --cwd "$SCRIPT_DIR/backend" python run.py > ../logs/backend.log 2>&1 &
+BACKEND_PID=$!
+cd ..
+
+# Wait for backend to start
+echo -e "${BLUE}      Waiting for backend to initialize...${NC}"
+sleep 3
+
+# Check if backend is running
+if ps -p $BACKEND_PID > /dev/null; then
+    # Check if port 8000 is open
+    for i in {1..10}; do
+        if curl -s http://localhost:8000 > /dev/null 2>&1; then
+            echo -e "${GREEN}      Backend running at http://localhost:8000 (PID: $BACKEND_PID)${NC}"
+            echo -e "${BLUE}      Logs: logs/backend.log${NC}"
+            break
+        fi
+        if [ $i -eq 10 ]; then
+            echo -e "${RED}      Backend failed to start properly${NC}"
+            echo -e "${YELLOW}      Check logs/backend.log for errors${NC}"
+        else
+            sleep 1
+        fi
+    done
+else
+    echo -e "${RED}      Backend process died${NC}"
+    echo -e "${YELLOW}      Check logs/backend.log for errors${NC}"
+fi
+echo ""
+
+# 3. Start Frontend (React)
+echo -e "${BLUE}[3/3] Starting Frontend (React)...${NC}"
+cd frontend
+
+# Check if node_modules exists
+if [ ! -d "node_modules" ]; then
+    echo -e "${BLUE}      Installing dependencies...${NC}"
+    npm install > ../logs/frontend-install.log 2>&1
+    echo -e "${GREEN}      Dependencies installed${NC}"
+fi
+
+# Start React dev server
+npm start > ../logs/frontend.log 2>&1 &
+FRONTEND_PID=$!
+cd ..
+
+# Wait for frontend to start
+echo -e "${BLUE}      Waiting for frontend to build...${NC}"
+sleep 5
+
+if ps -p $FRONTEND_PID > /dev/null; then
+    # Check if port 3000 is open
+    for i in {1..15}; do
+        if curl -s http://localhost:3000 > /dev/null 2>&1; then
+            echo -e "${GREEN}      Frontend running at http://localhost:3000 (PID: $FRONTEND_PID)${NC}"
+            echo -e "${BLUE}      Logs: logs/frontend.log${NC}"
+            break
+        fi
+        if [ $i -eq 15 ]; then
+            echo -e "${YELLOW}      Frontend may still be starting...${NC}"
+            echo -e "${BLUE}      Check logs/frontend.log or wait a bit longer${NC}"
+        else
+            sleep 2
+        fi
+    done
+else
+    echo -e "${RED}      Frontend process died${NC}"
+    echo -e "${YELLOW}      Check logs/frontend.log for errors${NC}"
+fi
+
+echo ""
+echo -e "${BLUE}========================================${NC}"
+echo -e "${GREEN}All services started!${NC}"
+echo -e "${BLUE}========================================${NC}"
+echo ""
+echo -e "${BLUE}Service URLs:${NC}"
+echo -e "   ${GREEN}Frontend:${NC}  http://localhost:3000"
+echo -e "   ${GREEN}Backend:${NC}   http://localhost:8000"
+echo -e "   ${GREEN}API Docs:${NC}  http://localhost:8000/docs"
+if [ "$SKIP_OLLAMA" = false ]; then
+    echo -e "   ${GREEN}Ollama:${NC}    http://localhost:11434"
+fi
+echo ""
+echo -e "${BLUE}Log Files:${NC}"
+echo -e "   Backend:  ${YELLOW}logs/backend.log${NC}"
+echo -e "   Frontend: ${YELLOW}logs/frontend.log${NC}"
+if [ "$SKIP_OLLAMA" = false ]; then
+    echo -e "   Ollama:   ${YELLOW}logs/ollama.log${NC}"
+fi
+echo ""
+echo -e "${BLUE}Commands:${NC}"
+echo -e "   View backend logs:  ${YELLOW}tail -f logs/backend.log${NC}"
+echo -e "   View frontend logs: ${YELLOW}tail -f logs/frontend.log${NC}"
+echo -e "   Stop all services:  ${YELLOW}Press Ctrl+C${NC}"
+echo ""
+echo -e "${GREEN}Application ready! Open http://localhost:3000 in your browser${NC}"
+echo ""
+echo -e "${YELLOW}Press Ctrl+C to stop all services...${NC}"
+
+# Keep script running and wait for user interrupt
+wait

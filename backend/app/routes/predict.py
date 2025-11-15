@@ -26,7 +26,7 @@ async def predict(file: UploadFile = File(...)):
         if len(contents) == 0:
             raise HTTPException(400, "Uploaded file is empty")
         
-        logger.info(f"📷 Processing image: {file.filename} ({len(contents)} bytes)")
+        logger.info(f" Processing image: {file.filename} ({len(contents)} bytes)")
         
         # Run prediction
         result = await predict_disease(contents)
@@ -37,7 +37,7 @@ async def predict(file: UploadFile = File(...)):
             logger.error(f"Prediction failed: {error_msg}")
             raise HTTPException(500, f"Prediction failed: {error_msg}")
         
-        logger.info(f"🎯 Prediction successful: {result['predictions']['best']['label']} ({result['predictions']['best']['score']:.2%})")
+        logger.info(f" Prediction successful: {result['predictions']['best']['label']} ({result['predictions']['best']['score']:.2%})")
         return result
         
     except HTTPException:
