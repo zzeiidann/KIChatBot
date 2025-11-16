@@ -18,6 +18,7 @@ class ChatResponse(BaseModel):
     success: bool
     response: str
     message: str = ""
+    products: list = []  # Recommended products with full details
 
 # Konfigurasi Ollama
 OLLAMA_URL = "http://localhost:11434/api/generate"
@@ -47,68 +48,46 @@ def get_quick_response(user_message: str, disease_info: dict) -> str:
             return template.format(disease=disease_name, confidence=confidence)
     return None
 
-def get_ollama_response(user_message: str, disease_info: dict) -> str:
-    """Get response from Ollama - Optimized for speed"""
+def get_rag_response(user_message: str, disease_info: dict) -> dict:
+    """Get response from RAG service with product recommendations"""
     try:
-        # Cek quick response dulu (instant!)
-        quick_response = get_quick_response(user_message, disease_info)
-        if quick_response:
-            logger.info("Using quick response")
-            return quick_response
+        from app.services.rag_chat import generate_response
+        
+        # Enhance user message with disease context if available
+        enhanced_message = user_message
+        if disease_info:
+            disease_name = disease_info.get('disease', '')
+            if disease_name:
+                enhanced_message = f"{user_message} (Kondisi kulit terdeteksi: {disease_name})"
+        
+        # Get response from RAG service
+        result = generate_response(enhanced_message)
+        
+        # Add disease info to response if available
+        if disease_info and result.get('response'):
+            disease_name = disease_info.get('disease', '')
+            confidence = disease_info.get('confidence', 0) * 100
             
-        disease_name = disease_info.get('disease', 'kondisi kulit') if disease_info else 'kondisi kulit'
-        confidence = disease_info.get('confidence', 0) * 100 if disease_info else 0
+            # Add context about detected condition
+            if disease_name and 'detection' not in result['response'].lower():
+                detection_note = f"\n\n*Catatan: AI mendeteksi kondisi {disease_name} dengan akurasi {confidence:.1f}%. Untuk diagnosis medis yang akurat, konsultasikan dengan dokter kulit.*"
+                result['response'] += detection_note
         
-        # Prompt yang lebih baik
-        prompt = f"""Kamu adalah asisten dermatologi AI. Jawab dengan SINGKAT dan INFORMATIF (max 4 kalimat).
-
-Kondisi Terdeteksi: {disease_name}
-Akurasi AI: {confidence:.1f}%
-Pertanyaan User: {user_message}
-
-Berikan jawaban praktis dalam Bahasa Indonesia. Selalu ingatkan untuk konsultasi dokter jika perlu:"""
+        return result
         
-        payload = {
-            "model": OLLAMA_MODEL,
-            "prompt": prompt,
-            "stream": False,
-            "options": {
-                "temperature": 0.3,
-                "top_p": 0.7,
-                "num_predict": 150,  # Reduced for faster response
-                "repeat_penalty": 1.1
-            }
-        }
-        
-        logger.info("Calling Ollama...")
-        response = requests.post(OLLAMA_URL, json=payload, timeout=30)
-        response.raise_for_status()
-        
-        result = response.json()
-        return result["response"].strip()
-        
-    except requests.exceptions.Timeout:
-        logger.warning("Ollama timeout")
-        return "Maaf, respons sedang lambat. Silakan konsultasi langsung dengan dokter kulit untuk informasi akurat."
-    
-    except requests.exceptions.ConnectionError:
-        logger.error("Ollama not running")
-        fallback = get_quick_response(user_message, disease_info)
-        if fallback:
-            return fallback
-        return f"AI sedang offline. Untuk informasi tentang {disease_name}, silakan konsultasi dengan dokter spesialis kulit."
-    
     except Exception as e:
-        logger.error(f"Ollama error: {e}")
-        fallback = get_quick_response(user_message, disease_info)
-        if fallback:
-            return fallback
-        return f"Untuk informasi tentang {disease_name}, silakan konsultasi dengan dokter spesialis kulit."
+        logger.error(f"RAG service error: {e}")
+        # Fallback to quick response
+        quick_response = get_quick_response(user_message, disease_info)
+        return {
+            "response": quick_response if quick_response else "Maaf, terjadi kesalahan. Silakan coba lagi atau konsultasi dengan dokter kulit.",
+            "products": []
+        }
 
 @router.post("/chat", response_model=ChatResponse)
 async def chat_with_ai(chat_request: ChatRequest):
     """
-    Chat endpoint untuk konsultasi AI tentang kondisi kulit
+    Chat endpoint untuk konsultasi AI tentang kondisi kulit dengan rekomendasi produk
     """
     try:
         logger.info(f"Chat request: {chat_request.message}")
@@ -118,18 +97,23 @@ async def chat_with_ai(chat_request: ChatRequest):
         if not chat_request.message or len(chat_request.message.strip()) == 0:
             raise HTTPException(status_code=400, detail="Message cannot be empty")
         
-        # Get AI response
-        response_text = get_ollama_response(
+        # Get AI response with product recommendations from RAG service
+        result = get_rag_response(
             chat_request.message, 
             chat_request.disease_info or {}
         )
         
+        response_text = result.get('response', 'Maaf, terjadi kesalahan.')
+        products = result.get('products', [])
+        
         logger.info(f"Response generated: {response_text[:100]}...")
+        logger.info(f"Products recommended: {len(products)} items")
         
         return ChatResponse(
             success=True,
             response=response_text,
-            message="AI response generated successfully"
+            message="AI response generated successfully",
+            products=products
         )
         
     except HTTPException:

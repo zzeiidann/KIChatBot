@@ -15,10 +15,10 @@ Aplikasi web lengkap untuk deteksi penyakit kulit menggunakan AI dengan fitur ch
 ### AI & Machine Learning
 - **Deteksi Penyakit Kulit**: Upload gambar untuk analisis menggunakan Vision Transformer (ViT)
 - **RAG Chatbot**: Konsultasi dengan AI tentang kondisi kulit dan rekomendasi produk
-- **8 Kategori Penyakit**: Actinic Keratosis, Basal Cell Carcinoma, Dermatofibroma, dll.
+- **138 Kategori Penyakit**: Actinic Keratosis, Basal Cell Carcinoma, Dermatofibroma, dll.
 
 ### E-Commerce
-- **10 Produk Skincare**: Katalog lengkap dengan deskripsi detail
+- **20+ Produk Skincare**: Katalog lengkap dengan deskripsi detail
 - **Shopping Cart**: Tambah, update, dan kelola keranjang belanja
 - **Checkout System**: Proses pembelian yang mudah
 - **Product Recommendations**: Rekomendasi produk berdasarkan kondisi kulit
