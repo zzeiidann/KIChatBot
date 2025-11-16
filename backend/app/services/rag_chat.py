@@ -64,10 +64,11 @@ class PriceExtractor:
     """Extract and normalize price constraints from user queries"""
     
     PRICE_PATTERNS = [
-        r'(?:di ?bawah|under|maksimal|max|budget)\s*(?:rp\.?\s*)?(\d+(?:[.,]\d+)*)\s*(?:ribu|rb|k|juta|jt)?',
-        r'harga\s*(?:di ?bawah|under|maksimal|max)?\s*(?:rp\.?\s*)?(\d+(?:[.,]\d+)*)\s*(?:ribu|rb|k|juta|jt)?',
-        r'(?:rp\.?\s*)?(\d+(?:[.,]\d+)*)\s*(?:ribu|rb|k|juta|jt)\s*(?:ke ?bawah|atau kurang)',
-        r'budget\s*(?:rp\.?\s*)?(\d+(?:[.,]\d+)*)\s*(?:ribu|rb|k|juta|jt)?'
+        r'(?:di ?bawah|under|maksimal|max|budget|kurang dari|< ?)\s*(?:rp\.?\s*)?(\d+(?:[.,]\d+)*)\s*(?:ribu|rb|k|juta|jt)?',
+        r'harga\s*(?:di ?bawah|under|maksimal|max|kurang dari)?\s*(?:rp\.?\s*)?(\d+(?:[.,]\d+)*)\s*(?:ribu|rb|k|juta|jt)?',
+        r'(?:rp\.?\s*)?(\d+(?:[.,]\d+)*)\s*(?:ribu|rb|k|juta|jt)\s*(?:ke ?bawah|atau kurang|atau dibawah)',
+        r'budget\s*(?:rp\.?\s*)?(\d+(?:[.,]\d+)*)\s*(?:ribu|rb|k|juta|jt)?',
+        r'(?:yang|yg)\s*(?:kurang dari|< ?)\s*(?:rp\.?\s*)?(\d+(?:[.,]\d+)*)\s*(?:ribu|rb|k|juta|jt)?'
     ]
     
     @staticmethod
@@ -303,8 +304,8 @@ def generate_response(user_message: str) -> Dict:
             relevant_products = []
         else:
             # Product-related query - perform smart search
-            # Increase search pool if price filter is active
-            top_k = 20 if price_limit else 10
+            # IMPORTANT: Use ALL products if price filter active to ensure enough cheap options
+            top_k = 60 if price_limit else 10  # Search all 60 products when filtering by price
             relevant_products = search_products(user_message, top_k=top_k)
             logger.info(f"Found {len(relevant_products)} initial products")
         
