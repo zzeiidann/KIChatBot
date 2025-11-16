@@ -361,5 +361,305 @@ PRODUCTS = [
         "description": "Brightening serum dengan 5% Niacinamide, Papaya Extract, dan Squalane. Mengurangi dark spots dan hyperpigmentation. Rice Bran Extract memberikan natural glow. Vegan, cruelty-free, dan fragrance-free.",
         "ingredients": "Niacinamide 5%, Papaya Extract, Rice Bran Extract, Squalane",
         "usage": "Aplikasikan 2-3 tetes setelah toner. Pat lembut. Gunakan pagi dan malam. Cocok untuk morning routine."
+    },
+    {
+        "id": "31",
+        "name": "Rohto Hada Labo Shirojyun Premium Whitening Lotion",
+        "price": 145000,
+        "category": "Toner",
+        "for_conditions": ["Hiperpigmentasi", "Kulit Kusam", "Flek Hitam"],
+        "description": "Whitening lotion dengan Tranexamic Acid dan Vitamin C derivative untuk mencerahkan kulit. 2 jenis Hyaluronic Acid untuk hydration. Mengurangi dark spots dan meratakan skin tone. Made in Japan dengan teknologi advanced.",
+        "ingredients": "Tranexamic Acid, Vitamin C Derivative, Hyaluronic Acid, Vitamin E",
+        "usage": "Setelah cleansing, aplikasikan ke seluruh wajah. Dapat dilayer 2-3x untuk extra hydration."
+    },
+    {
+        "id": "32",
+        "name": "Melano CC Intensive Anti-Spot Essence",
+        "price": 165000,
+        "category": "Serum",
+        "for_conditions": ["Hiperpigmentasi", "Bekas Jerawat", "Flek Hitam"],
+        "description": "Essence dengan pure Vitamin C dan Vitamin E untuk intensive spot treatment. Mencegah dan mengurangi dark spots. Texture lightweight yang cepat menyerap. Best-seller dari Jepang untuk brightening.",
+        "ingredients": "Pure Vitamin C, Vitamin E, Isopropyl Methylphenol, Dipotassium Glycyrrhizate",
+        "usage": "Aplikasikan langsung ke dark spots atau seluruh wajah setelah toner. Gunakan AM dan PM dengan sunscreen."
+    },
+    {
+        "id": "33",
+        "name": "Kose Sekkisei Lotion",
+        "price": 385000,
+        "category": "Toner",
+        "for_conditions": ["Kulit Kusam", "Hiperpigmentasi", "Kulit Kering"],
+        "description": "Iconic Japanese lotion dengan Oriental Herbal Complex untuk brightening. Job's Tears, Angelica, dan Melothria untuk mencerahkan dan melembabkan. Cult favorite untuk achieving translucent skin.",
+        "ingredients": "Job's Tears Extract, Angelica Extract, Melothria Extract, Alcohol",
+        "usage": "Tuang ke kapas, swipe ke wajah dengan gentle upward motion. Dapat digunakan sebagai lotion mask."
+    },
+    {
+        "id": "34",
+        "name": "Anessa Perfect UV Sunscreen Skincare Milk SPF 50+",
+        "price": 295000,
+        "category": "Sunscreen",
+        "for_conditions": ["Semua Jenis Kulit", "Outdoor Activity"],
+        "description": "Premium Japanese sunscreen dengan Auto Booster Technology yang makin kuat saat terkena keringat dan air. SPF 50+ PA++++ maximum protection. Skincare ingredients untuk merawat kulit. Super waterproof.",
+        "ingredients": "Auto Booster Technology, Hyaluronic Acid, Collagen, Green Tea Extract",
+        "usage": "Shake well, aplikasikan sebagai step terakhir skincare. Reapply setiap 2-3 jam saat outdoor."
+    },
+    {
+        "id": "35",
+        "name": "Shiseido Senka Aging Care UV Sunscreen SPF 50+",
+        "price": 78000,
+        "category": "Sunscreen",
+        "for_conditions": ["Anti Aging", "Kulit Kering", "Daily Protection"],
+        "description": "Sunscreen dengan anti-aging benefits. WR Collagen EX dan WR Hyaluronic Acid untuk melembabkan dan mencegah aging. Texture ringan, no whitecast. Water resistant dan affordable untuk daily use.",
+        "ingredients": "WR Collagen EX, WR Hyaluronic Acid, Vitamin E, UV Filters",
+        "usage": "Aplikasikan generous amount ke wajah dan leher. Reapply tiap 2-3 jam untuk optimal protection."
+    },
+    {
+        "id": "36",
+        "name": "Kanebo Suisai Beauty Clear Powder",
+        "price": 175000,
+        "category": "Pembersih",
+        "for_conditions": ["Komedo", "Pori Besar", "Kulit Kusam"],
+        "description": "Enzyme powder wash dengan 2 enzymes (Protease dan Lipase) untuk deep cleansing. Removes blackheads, excess sebum, dan dead skin cells. Individual capsule untuk freshness. Made in Japan.",
+        "ingredients": "Protease, Lipase, Amino Acid, Hyaluronic Acid",
+        "usage": "Basahi tangan, buka 1 kapsul, tambah air, buat busa, massage wajah, bilas. Gunakan 1-2x seminggu."
+    },
+    {
+        "id": "37",
+        "name": "DHC Deep Cleansing Oil",
+        "price": 245000,
+        "category": "Pembersih",
+        "for_conditions": ["Semua Jenis Kulit", "Makeup Removal"],
+        "description": "Best-selling cleansing oil dari Jepang dengan Olive Oil. Melts away makeup, sunscreen, dan impurities tanpa stripping. Water-soluble dan rinses clean. Suitable untuk semua jenis kulit including sensitive.",
+        "ingredients": "Olive Oil, Vitamin E, Rosemary Extract",
+        "usage": "Aplikasikan ke wajah kering, massage, tambah air untuk emulsify, bilas. Double cleanse recommended."
+    },
+    {
+        "id": "38",
+        "name": "Rohto Mentholatum Acnes Creamy Wash",
+        "price": 32000,
+        "category": "Pembersih",
+        "for_conditions": ["Jerawat", "Kulit Berminyak", "Komedo"],
+        "description": "Medicated facial wash dengan Isopropyl Methylphenol untuk anti-bakteri. Vitamin B6 dan E untuk skin health. Creamy foam yang gentle namun effective untuk acne-prone skin.",
+        "ingredients": "Isopropyl Methylphenol, Vitamin B6, Vitamin E, Glycerin",
+        "usage": "Keluarkan 2-3cm, buat busa, aplikasikan ke wajah, massage, bilas. Gunakan AM dan PM."
+    },
+    {
+        "id": "39",
+        "name": "Shiseido Elixir Superieur Lifting Moisture Lotion",
+        "price": 425000,
+        "category": "Toner",
+        "for_conditions": ["Anti Aging", "Kulit Kering", "Loss of Elasticity"],
+        "description": "Premium anti-aging lotion dengan Collagen GL dan Age Defense Complex. Improves skin elasticity dan firmness. Deeply hydrates dan prepares skin untuk better absorption. Luxury Japanese skincare.",
+        "ingredients": "Collagen GL, Age Defense Complex, Hyaluronic Acid, Aqua Collagen",
+        "usage": "Setelah cleansing, tuang ke kapas atau telapak tangan, pat ke wajah dan leher. Gunakan AM dan PM."
+    },
+    {
+        "id": "40",
+        "name": "Naturie Hatomugi Skin Conditioning Gel",
+        "price": 95000,
+        "category": "Pelembab",
+        "for_conditions": ["Semua Jenis Kulit", "Kulit Dehidrasi"],
+        "description": "All-in-one gel dengan Job's Tears (Hatomugi) Extract. Lightweight gel texture yang instantly hydrates. Can be used as toner, serum, moisturizer, atau mask. Large size 180g sangat economical.",
+        "ingredients": "Hatomugi (Job's Tears) Extract, Hyaluronic Acid, Placenta Extract",
+        "usage": "Aplikasikan generous amount ke wajah dan tubuh. Dapat digunakan sebagai sleeping mask dengan layer tebal."
+    },
+    {
+        "id": "41",
+        "name": "Kikumasamune High Moist Lotion",
+        "price": 115000,
+        "category": "Toner",
+        "for_conditions": ["Kulit Kering", "Kulit Kusam", "Body Care"],
+        "description": "Sake lotion dengan Rice Ferment Filtrate untuk brightening dan hydration. Amino acids dan ceramides untuk strengthen barrier. Huge 500ml bottle untuk face dan body. Pink bottle cult favorite.",
+        "ingredients": "Sake (Rice Ferment), Arbutin, Placenta Extract, Ceramides, Amino Acids",
+        "usage": "Tuang generous amount ke tangan atau spray bottle, aplikasikan ke wajah dan body. Layer multiple times."
+    },
+    {
+        "id": "42",
+        "name": "Rohto Obagi C20 Serum",
+        "price": 385000,
+        "category": "Serum",
+        "for_conditions": ["Hiperpigmentasi", "Kulit Kusam", "Anti Aging"],
+        "description": "High concentration Vitamin C serum dengan 20% pure L-Ascorbic Acid. Powerful brightening dan anti-aging. Vitamin E untuk stability. Premium Japanese formula untuk visible results.",
+        "ingredients": "Vitamin C 20% (L-Ascorbic Acid), Vitamin E, Propylene Glycol",
+        "usage": "Aplikasikan 3-4 tetes ke wajah setelah toner. Gunakan PM only atau dengan sunscreen di AM. Store in cool place."
+    },
+    {
+        "id": "43",
+        "name": "Curel Intensive Moisture Care Emulsion",
+        "price": 245000,
+        "category": "Pelembab",
+        "for_conditions": ["Kulit Sensitif", "Kulit Kering", "Dermatitis"],
+        "description": "Emulsion untuk sensitive dry skin dengan Ceramide functional ingredients. Fragrance-free, colorant-free, alcohol-free. Hypoallergenic dan dermatologically tested. Strengthens skin barrier dan deeply moisturizes.",
+        "ingredients": "Ceramide Functional Ingredients, Eucalyptus Extract, Glycerin",
+        "usage": "Setelah lotion/toner, aplikasikan ke wajah dengan gentle pressing motion. Gunakan AM dan PM."
+    },
+    {
+        "id": "44",
+        "name": "Softymo Speedy Cleansing Oil",
+        "price": 85000,
+        "category": "Pembersih",
+        "for_conditions": ["Semua Jenis Kulit", "Makeup Removal"],
+        "description": "Fast-acting cleansing oil yang removes makeup dalam 10 detik. 5 organic oils untuk nourishment. Rinses clean tanpa residue. Affordable Japanese makeup remover untuk daily use.",
+        "ingredients": "Organic Oils (Jojoba, Olive, Sesame, Shea, Safflower)",
+        "usage": "Aplikasikan ke wajah kering, massage 10 detik, tambah air, emulsify, bilas."
+    },
+    {
+        "id": "45",
+        "name": "Minon Amino Moist Charge Milk",
+        "price": 265000,
+        "category": "Pelembab",
+        "for_conditions": ["Kulit Sensitif", "Kulit Kering", "Barrier Rusak"],
+        "description": "Milky lotion dengan 9 Amino Acids untuk repair dan strengthen barrier. Untuk sensitive skin yang mudah iritasi. Fragrance-free dan hypoallergenic. Provides long-lasting moisture tanpa heaviness.",
+        "ingredients": "9 Amino Acids Complex, Ceramide, Hyaluronic Acid",
+        "usage": "Setelah toner, pump 1-2x ke telapak tangan, aplikasikan ke seluruh wajah. Gunakan AM dan PM."
+    },
+    {
+        "id": "46",
+        "name": "Kracie Naive Deep Cleansing Oil",
+        "price": 68000,
+        "category": "Pembersih",
+        "for_conditions": ["Semua Jenis Kulit", "Komedo"],
+        "description": "Affordable cleansing oil dengan Grape Seed Oil. Deep cleansing untuk blackheads dan makeup. Light texture yang easy to rinse. Budget-friendly Japanese quality.",
+        "ingredients": "Grape Seed Oil, Olive Oil, Vitamin E",
+        "usage": "Massage ke wajah kering, fokus ke area berminyak, emulsify dengan air, bilas thoroughly."
+    },
+    {
+        "id": "47",
+        "name": "Sana Nameraka Honpo Soy Milk Isoflavone Lotion",
+        "price": 105000,
+        "category": "Toner",
+        "for_conditions": ["Anti Aging", "Kulit Kering", "Loss of Firmness"],
+        "description": "Soy milk lotion dengan Isoflavones untuk anti-aging. Improves skin elasticity dan firmness. Hyaluronic Acid untuk moisture. Affordable anti-aging option dari Jepang.",
+        "ingredients": "Soy Milk Extract, Isoflavones, Hyaluronic Acid, Collagen",
+        "usage": "Tuang ke telapak tangan, pat ke wajah hingga absorbed. Dapat dilayer untuk extra moisture."
+    },
+    {
+        "id": "48",
+        "name": "Orbis Clear Full Wash",
+        "price": 125000,
+        "category": "Pembersih",
+        "for_conditions": ["Jerawat", "Kulit Berminyak", "Pori Besar"],
+        "description": "Facial wash khusus acne-prone skin dengan Amino Acid base. Gentle cleansing tanpa stripping. Mencegah breakouts dan controls sebum. Oil-free dan non-comedogenic.",
+        "ingredients": "Amino Acids, Dipotassium Glycyrrhizate, Collagen, Purple Brasilian Clay",
+        "usage": "Buat rich foam, massage ke wajah dengan circular motion, bilas. Gunakan 2x sehari."
+    },
+    {
+        "id": "49",
+        "name": "Utena Puresa Golden Jelly Mask Hyaluronic Acid",
+        "price": 45000,
+        "category": "Masker",
+        "for_conditions": ["Kulit Kering", "Kulit Dehidrasi", "Anti Aging"],
+        "description": "Jelly mask dengan Golden Jelly technology untuk intensive hydration. 3 types Hyaluronic Acid untuk multi-layer moisture. Jelly texture yang fit perfectly ke wajah. 3 sheets per pack.",
+        "ingredients": "Golden Jelly, Hyaluronic Acid (3 types), Collagen, Placenta",
+        "usage": "Aplikasikan ke wajah bersih, biarkan 10-15 menit, remove mask, pat essence. Gunakan 2-3x seminggu."
+    },
+    {
+        "id": "50",
+        "name": "Transino Whitening Clear Lotion",
+        "price": 335000,
+        "category": "Toner",
+        "for_conditions": ["Melasma", "Hiperpigmentasi", "Flek Hitam"],
+        "description": "Medicated lotion khusus melasma dengan Tranexamic Acid. Intensive whitening untuk stubborn pigmentation. Dipotassium Glycyrrhizate untuk anti-inflammatory. Premium Japanese medicated skincare.",
+        "ingredients": "Tranexamic Acid, Dipotassium Glycyrrhizate, Vitamin C Derivative",
+        "usage": "Setelah cleansing, aplikasikan dengan kapas ke seluruh wajah atau fokus ke dark spots. Gunakan AM dan PM."
+    },
+    {
+        "id": "51",
+        "name": "Rosette Ceramide Gel",
+        "price": 145000,
+        "category": "Pelembab",
+        "for_conditions": ["Barrier Rusak", "Kulit Sensitif", "Kulit Kering"],
+        "description": "All-in-one gel dengan 3 types Ceramides untuk barrier repair. 5-in-1: toner, essence, emulsion, cream, dan pack. Fragrance-free dan colorant-free. Economical 80g tube.",
+        "ingredients": "Ceramide 1, Ceramide 3, Ceramide 6 II, Hyaluronic Acid, Collagen",
+        "usage": "Setelah cleansing, aplikasikan ke seluruh wajah. Dapat digunakan solo atau sebelum moisturizer."
+    },
+    {
+        "id": "52",
+        "name": "Tsururi Point Clay Pack",
+        "price": 95000,
+        "category": "Masker",
+        "for_conditions": ["Komedo", "Pori Besar", "Hidung Berminyak"],
+        "description": "Clay pack khusus untuk nose area. Ghassoul Clay dan Moroccan Lava Clay untuk absorb blackheads. Removes stubborn sebum plugs. AHA untuk gentle exfoliation. Peel-off type.",
+        "ingredients": "Ghassoul Clay, Moroccan Lava Clay, AHA, Charcoal Powder",
+        "usage": "Aplikasikan thick layer ke hidung atau T-zone, tunggu hingga kering, peel off gently. Gunakan 1-2x seminggu."
+    },
+    {
+        "id": "53",
+        "name": "Bifesta Cleansing Lotion Bright Up",
+        "price": 105000,
+        "category": "Pembersih",
+        "for_conditions": ["Semua Jenis Kulit", "Kulit Kusam"],
+        "description": "Cleansing lotion dengan Coenzyme Q10 untuk brightening. All-in-one makeup remover dan facial wash. Water-based formula yang rinse-free. Large 300ml bottle economical.",
+        "ingredients": "Coenzyme Q10, Hyaluronic Acid, Vitamin B, Vitamin E",
+        "usage": "Tuang ke kapas, wipe seluruh wajah hingga makeup terangkat. Tidak perlu dibilas atau bisa bilas jika prefer."
+    },
+    {
+        "id": "54",
+        "name": "Ishizawa Lab Keana Nadeshiko Rice Mask",
+        "price": 125000,
+        "category": "Masker",
+        "for_conditions": ["Pori Besar", "Kulit Berminyak", "Kulit Kusam"],
+        "description": "Wash-off mask dengan 100% Rice ingredients untuk pore care. Rice Ceramide dan Rice Bran untuk tighten pores dan brighten. Traditional Japanese beauty secret. Can be used daily.",
+        "ingredients": "Rice Ceramide, Rice Bran, Rice Extract, Rice Ferment",
+        "usage": "Aplikasikan ke wajah bersih, hindari mata dan bibir. Biarkan 5-10 menit, bilas. Daily use OK."
+    },
+    {
+        "id": "55",
+        "name": "Kose Clear Turn Premium Fresh Mask",
+        "price": 165000,
+        "category": "Masker",
+        "for_conditions": ["Kulit Kering", "Anti Aging", "Kulit Kusam"],
+        "description": "Premium sheet mask dengan Royal Jelly dan 5 types Collagen. Super thick sheet dengan 55ml essence. Intensive hydration dan anti-aging. Box berisi 4 sheets untuk weekly treatment.",
+        "ingredients": "Royal Jelly, 5 Types Collagen, Hyaluronic Acid, Placenta, Vitamin C",
+        "usage": "Aplikasikan ke wajah bersih, biarkan 10-20 menit, remove, pat remaining essence. 1-2x seminggu."
+    },
+    {
+        "id": "56",
+        "name": "PDC Wafood Made Sake Lees Mask",
+        "price": 135000,
+        "category": "Masker",
+        "for_conditions": ["Kulit Kusam", "Pori Besar", "Kulit Berminyak"],
+        "description": "Wash-off mask dengan Sake Lees untuk brightening dan pore refining. Traditional Japanese ingredient untuk translucent skin. Absorbs excess sebum dan removes impurities. Creamy texture.",
+        "ingredients": "Sake Lees, Rice Bran, Job's Tears Extract, Collagen",
+        "usage": "Aplikasikan layer tebal ke wajah, tunggu 5 menit, massage dengan air, bilas. 2-3x seminggu."
+    },
+    {
+        "id": "57",
+        "name": "Meishoku Bigansui Skin Lotion",
+        "price": 85000,
+        "category": "Toner",
+        "for_conditions": ["Jerawat", "Kulit Berminyak", "Pori Besar"],
+        "description": "Medicated lotion untuk acne dan oily skin. Salicylic Acid dan Homosulfamine untuk anti-acne. Controls excess sebum dan tightens pores. Affordable Japanese classic sejak 1885.",
+        "ingredients": "Salicylic Acid, Homosulfamine, Glycyrrhetinic Acid, Menthol",
+        "usage": "Setelah cleansing, saturate kapas, wipe ke seluruh wajah. Fokus ke area berjerawat. Gunakan AM dan PM."
+    },
+    {
+        "id": "58",
+        "name": "Kracie Hadabisei 3D Facial Mask",
+        "price": 155000,
+        "category": "Masker",
+        "for_conditions": ["Kulit Kering", "Anti Aging", "Loss of Elasticity"],
+        "description": "3D structure sheet mask dengan superior fit. Royal Jelly, Hyaluronic Acid, dan Collagen untuk anti-aging. Extra thick sheet holds 30ml essence. Box berisi 4 masks untuk intensive care.",
+        "ingredients": "Royal Jelly, Hyaluronic Acid, Collagen, Vitamin E, Vitamin C Derivative",
+        "usage": "Unfold mask, align dengan wajah, biarkan 15 menit, remove, massage remaining essence. 1-2x seminggu."
+    },
+    {
+        "id": "59",
+        "name": "Lululun Precious White Sheet Mask",
+        "price": 275000,
+        "category": "Masker",
+        "for_conditions": ["Hiperpigmentasi", "Kulit Kusam", "Anti Aging"],
+        "description": "Premium daily sheet mask dengan L-Ascorbic Acid 2-Glucoside untuk whitening. Pearl Extract dan Rice Ceramide. Ultra soft sheet untuk daily use. 32 sheets per box untuk 1 month treatment.",
+        "ingredients": "Vitamin C Derivative, Pearl Extract, Rice Ceramide, Squalane",
+        "usage": "Gunakan setiap malam setelah toner, biarkan 10 menit, remove, lanjutkan dengan skincare. Daily use recommended."
+    },
+    {
+        "id": "60",
+        "name": "Shiseido Uno Whip Wash Scrub",
+        "price": 55000,
+        "category": "Pembersih",
+        "for_conditions": ["Kulit Kusam", "Pori Besar", "Komedo"],
+        "description": "Scrub foam wash dengan micro scrub particles untuk gentle exfoliation. Menghilangkan dead skin cells dan blackheads. Fresh citrus scent. Suitable untuk men dan women.",
+        "ingredients": "Scrub Particles, Hyaluronic Acid, Glycerin, Menthol",
+        "usage": "Basahi wajah, keluarkan foam, massage dengan circular motion, bilas. Gunakan 2-3x seminggu."
     }
 ]

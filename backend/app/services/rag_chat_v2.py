@@ -7,8 +7,8 @@ import requests
 import logging
 import re
 from typing import Dict, List, Optional, Tuple
-from app.database.vector_db import search_products
-from app.database.products_data import SKINCARE_KNOWLEDGE
+from ..database.vector_db import search_products
+from ..database.products_data import SKINCARE_KNOWLEDGE
 
 logger = logging.getLogger(__name__)
 
