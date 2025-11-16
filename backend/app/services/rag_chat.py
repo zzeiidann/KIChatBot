@@ -14,6 +14,16 @@ OLLAMA_MODEL = "llama3.2:latest"  # Change this to your installed model
 def call_ollama(prompt: str, context: str = "") -> dict:
     """Call Ollama API for text generation and return response with product references"""
     try:
+        # First check if Ollama is accessible
+        try:
+            health_check = requests.get(f"{OLLAMA_BASE_URL}/api/tags", timeout=2)
+            if health_check.status_code != 200:
+                logger.warning(f"Ollama health check failed with status {health_check.status_code}")
+                return None
+        except requests.exceptions.RequestException:
+            logger.warning("Ollama is not running or not accessible. Start with: ollama serve")
+            return None
+        
         full_prompt = f"""You are a skincare expert assistant for a skincare products e-commerce platform.
 
 CONTEXT:
@@ -29,6 +39,7 @@ Provide a helpful, concise response in Indonesian language. When recommending pr
 
 Be conversational and helpful. If multiple products are available, recommend 2-3 best options."""
 
+        logger.info(f"Calling Ollama with model: {OLLAMA_MODEL}")
         response = requests.post(
             f"{OLLAMA_BASE_URL}/api/generate",
             json={
@@ -38,24 +49,30 @@ Be conversational and helpful. If multiple products are available, recommend 2-3
                 "options": {
                     "temperature": 0.7,
                     "top_p": 0.9,
-                    "max_tokens": 350
+                    "num_predict": 200  # Limit response length for faster generation
                 }
             },
-            timeout=30
+            timeout=60  # Increased to 60s for first-time model loading
         )
         
         if response.status_code == 200:
             result = response.json()
+            logger.info("Ollama response received successfully")
             return {"response": result.get("response", "").strip(), "success": True}
         else:
-            logger.error(f"Ollama API error: {response.status_code}")
+            logger.error(f"Ollama API error: {response.status_code} - {response.text}")
             return None
             
-    except requests.exceptions.ConnectionError:
-        logger.error("Cannot connect to Ollama. Make sure Ollama is running on localhost:11434")
+    except requests.exceptions.ConnectionError as e:
+        logger.error(f"Cannot connect to Ollama at {OLLAMA_BASE_URL}: {e}")
+        logger.error("Make sure Ollama is running: ollama serve")
+        return None
+    except requests.exceptions.Timeout:
+        logger.error("Ollama request timed out (60s). Model may be loading or system is slow.")
+        logger.error("Try: ollama run llama3.2 'test' (to preload model)")
         return None
     except Exception as e:
-        logger.error(f"Error calling Ollama: {e}")
+        logger.error(f"Unexpected error calling Ollama: {e}", exc_info=True)
         return None
 
 def generate_response(user_message: str, conversation_history: list = None) -> dict:
@@ -70,14 +87,49 @@ def generate_response(user_message: str, conversation_history: list = None) -> d
         # Load skincare knowledge base
         from app.database.products_data import SKINCARE_KNOWLEDGE
         
-        # Search relevant products (increase to 5 for better selection)
-        relevant_products = search_products(user_message, top_k=5)
+        # Detect if this is an information/medical question
+        user_msg_lower = user_message.lower()
+        info_keywords = ['apa itu', 'what is', 'jelaskan', 'explain', 'maksud', 'meaning', 'define', 
+                         'gejala', 'symptom', 'penyebab', 'cause', 'cara mengobati', 'how to treat',
+                         'berbahaya', 'danger', 'menular', 'contagious']
+        is_info_question = any(keyword in user_msg_lower for keyword in info_keywords)
+        
+        # Check for price filter FIRST
+        price_limit = None
+        if 'dibawah' in user_msg_lower or 'di bawah' in user_msg_lower or 'under' in user_msg_lower or 'harga' in user_msg_lower:
+            # Remove dots and extract numbers
+            # "100.000" -> "100000", "100 ribu" -> "100000"
+            normalized = user_msg_lower.replace('.', '').replace(',', '')
+            normalized = normalized.replace(' ribu', '000').replace('ribu', '000')
+            normalized = normalized.replace(' rb', '000').replace('rb', '000')
+            normalized = normalized.replace(' k', '000').replace('k', '000')
+            
+            # Find all numbers
+            numbers = re.findall(r'\d+', normalized)
+            if numbers:
+                # Take the first number found
+                price_limit = int(numbers[0])
+        logger.info(f"Extracted price limit: Rp {price_limit:,}")
+        
+        # Search relevant products (increase to 15 for better selection before price filtering)
+        top_k = 15 if price_limit else 5
+        relevant_products = search_products(user_message, top_k=top_k)
+        
+        # Apply price filter if detected
+        if price_limit and relevant_products:
+            original_count = len(relevant_products)
+            relevant_products = [p for p in relevant_products if p.get('price', 0) <= price_limit]
+            logger.info(f"Price filter applied: {original_count} -> {len(relevant_products)} products (≤ Rp {price_limit:,})")
         
         # Build comprehensive context from products and knowledge base
         product_context = f"SKINCARE KNOWLEDGE BASE:\n{SKINCARE_KNOWLEDGE}\n\n"
         
-        if relevant_products:
-            product_context += "=== AVAILABLE PRODUCTS IN OUR STORE ===\n\n"
+        if relevant_products and not is_info_question:
+            if price_limit:
+                product_context += f"=== AVAILABLE PRODUCTS WITHIN BUDGET (≤ Rp {price_limit:,}) ===\n\n"
+            else:
+                product_context += "=== AVAILABLE PRODUCTS IN OUR STORE ===\n\n"
+            
             for idx, product in enumerate(relevant_products, 1):
                 product_context += f"{idx}. **{product['name']}** (Rp {product['price']:,})\n"
                 product_context += f"   Category: {product.get('category', 'General')}\n"
@@ -89,16 +141,39 @@ def generate_response(user_message: str, conversation_history: list = None) -> d
                 if product.get('usage'):
                     product_context += f"   How to Use: {product['usage']}\n"
                 product_context += "\n"
+            
+            # Add note if no products found within budget
+            if price_limit and len(relevant_products) == 0:
+                product_context += f"NOTE: No products found within budget of Rp {price_limit:,}. Minimum product price is Rp 18,000.\n"
+        
+        # Customize prompt based on question type
+        if is_info_question:
+            # For info questions, add explicit instruction to NOT recommend products
+            custom_instruction = "\n\nIMPORTANT: User is asking for MEDICAL INFORMATION, not product recommendations. Provide educational information about the condition ONLY. DO NOT recommend products. Guide them to consult a dermatologist for diagnosis."
+            enhanced_message = user_message + custom_instruction
+        elif price_limit:
+            # For price queries, emphasize the budget constraint
+            custom_instruction = f"\n\nIMPORTANT: User has a budget constraint of Rp {price_limit:,}. ONLY recommend products from the list that are within this budget. Mention the price clearly."
+            enhanced_message = user_message + custom_instruction
+        else:
+            enhanced_message = user_message
         
         # Try to get response from Ollama
-        ollama_result = call_ollama(user_message, product_context)
+        ollama_result = call_ollama(enhanced_message, product_context)
         
         if ollama_result and ollama_result.get("success"):
             logger.info(f"Generated response using Ollama for: '{user_message}'")
-            return {
-                "response": ollama_result["response"],
-                "products": relevant_products[:3]  # Return top 3 products
-            }
+            # For info questions, don't return products
+            if is_info_question:
+                return {
+                    "response": ollama_result["response"],
+                    "products": []  # No products for medical info questions
+                }
+            else:
+                return {
+                    "response": ollama_result["response"],
+                    "products": relevant_products[:3]  # Return top 3 products
+                }
         
         # Fallback to rule-based response if Ollama is not available
         logger.warning("Ollama not available, using fallback response")
@@ -126,20 +201,36 @@ def generate_response(user_message: str, conversation_history: list = None) -> d
         
         # If asking about medical condition/disease (not product related)
         if is_info_question:
-            # Check if disease info is available
-            disease_context = ""
-            if user_message and '(' in user_message and 'Kondisi kulit terdeteksi:' in user_message:
-                # Extract disease name from enhanced message
-                disease_match = re.search(r'Kondisi kulit terdeteksi:\s*([^)]+)', user_message)
-                if disease_match:
-                    disease_name = disease_match.group(1).strip()
-                    disease_context = f" yang terdeteksi ({disease_name})"
+            # Try to extract the disease/condition name from the question
+            disease_name = None
             
-            response = f"Saya adalah asisten produk skincare. Untuk informasi medis{disease_context}, saya sarankan:\n\n"
+            # Look for patterns like "apa itu X", "what is X", "jelaskan X"
+            patterns = [
+                r'apa itu\s+([a-zA-Z\s]+?)(?:\?|$|,|\s+terus)',
+                r'what is\s+([a-zA-Z\s]+?)(?:\?|$|,)',
+                r'jelaskan\s+(?:tentang\s+)?([a-zA-Z\s]+?)(?:\?|$|,)',
+                r'gejala\s+(?:dari\s+)?([a-zA-Z\s]+?)(?:\?|$|,)',
+            ]
+            
+            for pattern in patterns:
+                match = re.search(pattern, user_msg_lower)
+                if match:
+                    disease_name = match.group(1).strip()
+                    break
+            
+            # Build response
+            if disease_name:
+                response = f"Untuk informasi medis tentang **{disease_name.title()}**, saya sarankan:\n\n"
+            else:
+                response = "Untuk informasi medis yang Anda tanyakan, saya sarankan:\n\n"
+            
             response += "1. **Konsultasi dengan Dokter Kulit (Sp.KK)** untuk diagnosis dan penjelasan medis yang akurat\n"
-            response += "2. Gunakan fitur **upload gambar** di aplikasi kami untuk deteksi AI (bukan diagnosis medis)\n"
-            response += "3. Baca informasi lengkap di bagian **Knowledge Base** aplikasi\n\n"
-            response += "Apakah Anda ingin saya rekomendasikan **produk perawatan** untuk kondisi tersebut?"
+            response += "2. Gunakan fitur **Upload Gambar** di aplikasi untuk deteksi AI (bukan diagnosis medis)\n"
+            response += "3. Baca **Knowledge Base** aplikasi untuk informasi umum kondisi kulit\n\n"
+            
+            # Add helpful note about Ollama being offline
+            response += "⚠️ *Catatan: Chatbot AI sedang offline. Untuk penjelasan detail, pastikan Ollama running.*\n\n"
+            response += "Apakah Anda ingin saya rekomendasikan **produk perawatan** untuk kondisi ini?"
             
             return {
                 "response": response,

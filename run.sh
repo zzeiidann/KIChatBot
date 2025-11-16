@@ -75,31 +75,47 @@ if [ "$SKIP_OLLAMA" = false ]; then
     echo -e "${BLUE}[1/3] Starting Ollama server...${NC}"
     
     # Check if ollama is already running
-    if pgrep -x "ollama" > /dev/null; then
-        echo -e "${YELLOW}      Ollama already running${NC}"
+    if curl -s http://localhost:11434/api/tags > /dev/null 2>&1; then
+        echo -e "${GREEN}      Ollama already running${NC}"
     else
-        ollama serve > logs/ollama.log 2>&1 &
+        echo -e "${BLUE}      Starting Ollama service...${NC}"
+        nohup ollama serve > logs/ollama.log 2>&1 &
         OLLAMA_PID=$!
-        sleep 2
         
-        # Check if ollama started successfully
-        if pgrep -x "ollama" > /dev/null; then
-            echo -e "${GREEN}      Ollama started (PID: $OLLAMA_PID)${NC}"
-            echo -e "${BLUE}      Logs: logs/ollama.log${NC}"
-            
-            # Pull llama3.2 if not exists
-            echo -e "${BLUE}      Checking for llama3.2 model...${NC}"
-            if ! ollama list | grep -q "llama3.2"; then
-                echo -e "${BLUE}      Pulling llama3.2 model (this may take a while)...${NC}"
-                ollama pull llama3.2 > logs/ollama-pull.log 2>&1 &
-                echo -e "${YELLOW}      Model pulling in background, check logs/ollama-pull.log${NC}"
-            else
-                echo -e "${GREEN}      llama3.2 model ready${NC}"
+        # Wait for Ollama to be ready
+        echo -e "${BLUE}      Waiting for Ollama to start...${NC}"
+        for i in {1..15}; do
+            if curl -s http://localhost:11434/api/tags > /dev/null 2>&1; then
+                echo -e "${GREEN}      Ollama started successfully (PID: $OLLAMA_PID)${NC}"
+                break
             fi
+            if [ $i -eq 15 ]; then
+                echo -e "${RED}      Ollama failed to start after 15 seconds${NC}"
+                echo -e "${YELLOW}      Check logs/ollama.log${NC}"
+                SKIP_OLLAMA=true
+            fi
+            sleep 1
+        done
+    fi
+    
+    # Check and pull model if needed
+    if [ "$SKIP_OLLAMA" = false ]; then
+        echo -e "${BLUE}      Checking llama3.2 model...${NC}"
+        if ! ollama list | grep -q "llama3.2"; then
+            echo -e "${YELLOW}      llama3.2 not found, pulling...${NC}"
+            echo -e "${BLUE}      This will take 5-10 minutes on first run${NC}"
+            ollama pull llama3.2
+            echo -e "${GREEN}      Model downloaded${NC}"
         else
-            echo -e "${RED}      Failed to start Ollama${NC}"
-            SKIP_OLLAMA=true
+            echo -e "${GREEN}      llama3.2 model ready${NC}"
         fi
+        
+        # Preload model to cache (warm up)
+        echo -e "${BLUE}      Preloading model to cache...${NC}"
+        timeout 30 ollama run llama3.2 "test" > /dev/null 2>&1 &
+        sleep 3
+        echo -e "${GREEN}      Model preloaded${NC}"
+        echo -e "${BLUE}      Logs: logs/ollama.log${NC}"
     fi
 else
     echo -e "${YELLOW}[1/3] Skipping Ollama (chatbot will not work)${NC}"
