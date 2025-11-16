@@ -312,7 +312,9 @@ def generate_response(user_message: str) -> Dict:
         if price_limit and relevant_products:
             original_count = len(relevant_products)
             relevant_products = [p for p in relevant_products if p.get('price', 0) <= price_limit]
-            logger.info(f"Price filter: {original_count} -> {len(relevant_products)} products")
+            # Sort by price (cheapest first) when price filter is active
+            relevant_products = sorted(relevant_products, key=lambda x: x.get('price', 0))
+            logger.info(f"Price filter: {original_count} -> {len(relevant_products)} products (sorted by price)")
         
         # Filter by conditions if detected
         if conditions and relevant_products:
