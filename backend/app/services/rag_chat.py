@@ -3,6 +3,7 @@ from app.database.vector_db import search_products
 import logging
 import requests
 import json
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -104,33 +105,94 @@ def generate_response(user_message: str, conversation_history: list = None) -> d
         
         user_msg_lower = user_message.lower()
         
+        # Check if this is an information/medical question (not product request)
+        info_keywords = ['apa itu', 'what is', 'jelaskan', 'explain', 'maksud', 'meaning', 'define', 
+                         'gejala', 'symptom', 'penyebab', 'cause', 'cara mengobati', 'how to treat',
+                         'berbahaya', 'danger', 'menular', 'contagious']
+        is_info_question = any(keyword in user_msg_lower for keyword in info_keywords)
+        
+        # Check for price filter
+        price_limit = None
+        if 'dibawah' in user_msg_lower or 'di bawah' in user_msg_lower or 'under' in user_msg_lower:
+            # Extract number (e.g., "dibawah 100000" or "dibawah 100 ribu")
+            # Replace word forms with zeros first, then find all numbers
+            normalized = user_msg_lower.replace(' ribu', '000').replace('ribu', '000').replace(' rb', '000').replace('rb', '000').replace('k', '000')
+            numbers = re.findall(r'\d+', normalized)
+            if numbers:
+                price_limit = int(numbers[0])
+                # Filter products by price
+                if relevant_products:
+                    relevant_products = [p for p in relevant_products if p.get('price', 0) <= price_limit]
+        
+        # If asking about medical condition/disease (not product related)
+        if is_info_question:
+            # Check if disease info is available
+            disease_context = ""
+            if user_message and '(' in user_message and 'Kondisi kulit terdeteksi:' in user_message:
+                # Extract disease name from enhanced message
+                disease_match = re.search(r'Kondisi kulit terdeteksi:\s*([^)]+)', user_message)
+                if disease_match:
+                    disease_name = disease_match.group(1).strip()
+                    disease_context = f" yang terdeteksi ({disease_name})"
+            
+            response = f"Saya adalah asisten produk skincare. Untuk informasi medis{disease_context}, saya sarankan:\n\n"
+            response += "1. **Konsultasi dengan Dokter Kulit (Sp.KK)** untuk diagnosis dan penjelasan medis yang akurat\n"
+            response += "2. Gunakan fitur **upload gambar** di aplikasi kami untuk deteksi AI (bukan diagnosis medis)\n"
+            response += "3. Baca informasi lengkap di bagian **Knowledge Base** aplikasi\n\n"
+            response += "Apakah Anda ingin saya rekomendasikan **produk perawatan** untuk kondisi tersebut?"
+            
+            return {
+                "response": response,
+                "products": []  # Don't show products for medical questions
+            }
+        
+        # Product recommendation logic
         if any(word in user_msg_lower for word in ['kulit', 'skin', 'jerawat', 'acne', 'wajah', 'face']):
             if relevant_products:
-                products_text = "\n".join([f"- {p['name']} - Rp {p['price']:,}: {p['description'][:100]}..." for p in relevant_products[:3]])
-                response = f"Berdasarkan keluhan Anda, saya menemukan produk-produk ini:\n\n{products_text}\n\nTips: Untuk diagnosis kulit yang lebih akurat, silakan gunakan fitur upload gambar pada aplikasi kami."
+                # Apply price filter info to response
+                price_info = f" dengan harga di bawah Rp {price_limit:,}" if price_limit else ""
+                products_text = "\n".join([f"- **{p['name']}** - Rp {p['price']:,}: {p['description'][:80]}..." for p in relevant_products[:3]])
+                response = f"Rekomendasi produk{price_info}:\n\n{products_text}\n\n💡 Tips: Gunakan fitur upload gambar untuk diagnosis kulit yang lebih akurat."
             else:
-                response = "Saya memahami Anda bertanya tentang kulit. Untuk diagnosis kulit yang akurat, silakan gunakan fitur upload gambar pada aplikasi kami. Untuk produk perawatan kulit, kami memiliki berbagai pilihan yang tersedia."
+                if price_limit:
+                    response = f"Maaf, tidak ada produk yang sesuai dengan budget di bawah Rp {price_limit:,}. Produk kami mulai dari Rp 18,000. Apakah Anda ingin melihat produk terjangkau lainnya?"
+                else:
+                    response = "Saya memahami Anda bertanya tentang kulit. Untuk diagnosis kulit yang akurat, silakan gunakan fitur upload gambar pada aplikasi kami. Untuk produk perawatan kulit, kami memiliki berbagai pilihan yang tersedia."
         
-        elif any(word in user_msg_lower for word in ['harga', 'price', 'mahal', 'murah', 'beli', 'buy']):
+        elif any(word in user_msg_lower for word in ['harga', 'price', 'mahal', 'murah', 'beli', 'buy', 'budget']):
             if relevant_products:
-                products_text = "\n".join([f"- {p['name']} - Rp {p['price']:,}" for p in relevant_products[:3]])
-                response = f"Informasi harga produk:\n\n{products_text}"
+                price_info = f" di bawah Rp {price_limit:,}" if price_limit else ""
+                products_text = "\n".join([f"- **{p['name']}** - Rp {p['price']:,}" for p in relevant_products[:3]])
+                response = f"Produk{price_info}:\n\n{products_text}\n\n📦 Klik produk untuk detail lengkap dan tambahkan ke keranjang."
             else:
-                response = "Silakan sebutkan produk spesifik yang ingin Anda ketahui harganya, atau jelaskan kebutuhan kulit Anda."
+                if price_limit:
+                    response = f"Tidak ada produk dengan harga di bawah Rp {price_limit:,} untuk kriteria tersebut. Produk termurah kami adalah Nivea Creme Soap (Rp 18,000). Apakah Anda ingin melihat produk affordable lainnya?"
+                else:
+                    response = "Silakan sebutkan produk spesifik yang ingin Anda ketahui harganya, atau jelaskan kebutuhan kulit Anda dengan budget yang diinginkan."
         
-        elif any(word in user_msg_lower for word in ['rekomendasi', 'recommend', 'sarankan', 'suggest']):
+        elif any(word in user_msg_lower for word in ['rekomendasi', 'recommend', 'sarankan', 'suggest', 'bagus', 'terbaik', 'best']):
             if relevant_products:
-                products_text = "\n".join([f"- {p['name']} - Rp {p['price']:,}: {p['description'][:100]}..." for p in relevant_products[:3]])
-                response = f"Rekomendasi produk untuk Anda:\n\n{products_text}\n\nProduk-produk ini dipilih berdasarkan kebutuhan yang Anda sebutkan."
+                price_info = f" (budget di bawah Rp {price_limit:,})" if price_limit else ""
+                products_text = "\n".join([f"- **{p['name']}** - Rp {p['price']:,}: {p['description'][:80]}..." for p in relevant_products[:3]])
+                response = f"Rekomendasi produk untuk Anda{price_info}:\n\n{products_text}\n\n✨ Produk-produk ini dipilih berdasarkan kebutuhan yang Anda sebutkan."
             else:
-                response = "Bisa Anda jelaskan lebih detail tentang jenis kulit atau masalah kulit yang ingin diatasi? Saya akan berusaha memberikan rekomendasi yang tepat."
+                if price_limit:
+                    response = f"Maaf, tidak ada produk yang match dengan budget Rp {price_limit:,}. Bisa sebutkan jenis produk yang dibutuhkan? (cleanser, serum, sunscreen, dll)"
+                else:
+                    response = "Bisa Anda jelaskan lebih detail tentang jenis kulit atau masalah kulit yang ingin diatasi? Saya akan berusaha memberikan rekomendasi yang tepat."
         
         else:
-            if relevant_products:
-                products_text = "\n".join([f"- {p['name']} - Rp {p['price']:,}" for p in relevant_products[:3]])
-                response = f"Terima kasih atas pertanyaan Anda!\n\nProduk yang mungkin relevan:\n{products_text}\n\nApakah ada hal spesifik tentang perawatan kulit atau produk yang ingin Anda ketahui?"
+            # General query - only show products if they seem relevant
+            if relevant_products and any(word in user_msg_lower for word in ['produk', 'product', 'skincare', 'perawatan', 'treatment']):
+                price_info = f" di bawah Rp {price_limit:,}" if price_limit else ""
+                products_text = "\n".join([f"- **{p['name']}** - Rp {p['price']:,}" for p in relevant_products[:3]])
+                response = f"Produk yang mungkin Anda cari{price_info}:\n\n{products_text}\n\n💬 Tanyakan lebih spesifik untuk rekomendasi yang lebih tepat!"
             else:
-                response = "Terima kasih atas pertanyaan Anda! Apakah ada hal spesifik tentang perawatan kulit atau produk yang ingin Anda ketahui?"
+                response = "Terima kasih atas pertanyaan Anda! Saya adalah asisten produk skincare. Tanyakan tentang:\n\n"
+                response += "🔹 Rekomendasi produk (e.g., 'produk untuk jerawat')\n"
+                response += "🔹 Harga produk (e.g., 'produk dibawah 100ribu')\n"
+                response += "🔹 Info kondisi kulit (gunakan fitur upload gambar)\n\n"
+                response += "Ada yang bisa saya bantu?"
         
         return {
             "response": response,
