@@ -19,7 +19,7 @@ async def lifespan(app: FastAPI):
             init_db()
             logger.info(" Database initialized")
         except ImportError:
-            logger.info("ℹ️ No database configured")
+            logger.info("ℹ No database configured")
         
         # Pre-load AI model
         from app.models.ai_model import skin_model
