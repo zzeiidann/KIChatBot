@@ -2,6 +2,14 @@
 
 Aplikasi web lengkap untuk deteksi penyakit kulit menggunakan AI dengan fitur chatbot RAG dan e-commerce skincare products.
 
+##  Preview Aplikasi
+
+### Halaman Utama & Deteksi Penyakit + ChatBot
+![Interface 1](docs/images/Readmeimage1.jpeg)
+
+### E-Commerce & Shopping Cart
+![Interface 2](docs/images/Readmeimage2.jpeg)
+
 ## Fitur Utama
 
 ### AI & Machine Learning
