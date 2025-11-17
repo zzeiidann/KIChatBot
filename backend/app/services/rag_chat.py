@@ -158,6 +158,7 @@ YOUR ROLE:
 
 RESPONSE GUIDELINES:
 - Be concise but comprehensive (2-4 paragraphs)
+- **IF AI detected a skin condition**: Start by explaining what the condition is, its characteristics, and general care tips
 - Recommend 1-3 specific products when relevant
 - Explain WHY each product is suitable
 - Mention key ingredients and their benefits
@@ -275,7 +276,7 @@ def generate_fallback_response(user_message: str, products: List[Dict],
     return response
 
 
-def generate_response(user_message: str) -> Dict:
+def generate_response(user_message: str, disease_info: dict = None) -> Dict:
     """
     Generate comprehensive RAG response with advanced intent understanding
     and intelligent product recommendations
@@ -334,6 +335,16 @@ def generate_response(user_message: str) -> Dict:
         
         # Step 7: Prepare custom instructions
         custom_instruction = ""
+        
+        # Add disease context if available
+        if disease_info and disease_info.get('disease'):
+            disease_name = disease_info.get('disease', '')
+            confidence = disease_info.get('confidence', 0) * 100
+            custom_instruction += (
+                f"\n\nCONTEXT: AI detection shows user has '{disease_name}' condition (confidence: {confidence:.1f}%). "
+                f"START your response by briefly explaining what this condition is, its common causes, and general skincare tips. "
+                f"THEN provide product recommendations suitable for this condition."
+            )
         
         if intents.get('medical_info') and not intents.get('product_search'):
             custom_instruction = (

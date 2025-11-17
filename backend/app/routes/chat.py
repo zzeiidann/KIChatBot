@@ -61,7 +61,7 @@ def get_rag_response(user_message: str, disease_info: dict) -> dict:
                 enhanced_message = f"{user_message} (Kondisi kulit terdeteksi: {disease_name})"
         
         # Get response from RAG service
-        result = generate_response(enhanced_message)
+        result = generate_response(enhanced_message, disease_info)
         
         # Add disease info to response if available
         if disease_info and result.get('response'):

@@ -70,6 +70,7 @@ try:
     from app.routes.auth import router as auth_router
     from app.routes.products import router as products_router
     from app.routes.admin import router as admin_router
+    from app.routes.orders import router as orders_router
     
     # Register dengan prefix API v1
     app.include_router(predict_router, prefix="/api/v1", tags=["prediction"])
@@ -77,6 +78,7 @@ try:
     app.include_router(auth_router, prefix="/api/v1/auth", tags=["authentication"])
     app.include_router(products_router, prefix="/api/v1", tags=["products"])
     app.include_router(admin_router, prefix="/api/v1/admin", tags=["admin"])
+    app.include_router(orders_router, prefix="/api/v1", tags=["orders"])
     
     # Juga register tanpa prefix untuk compatibility
     app.include_router(predict_router, tags=["prediction-legacy"])
