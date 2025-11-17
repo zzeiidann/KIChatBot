@@ -124,6 +124,7 @@ echo ""
 
 # 2. Start Backend (FastAPI with Conda)
 echo -e "${BLUE}[2/3] Starting Backend (FastAPI + Conda)...${NC}"
+echo -e "${BLUE}      Note: AI model loads on first prediction (lazy loading)${NC}"
 cd backend
 conda run -n kichatbot --no-capture-output --cwd "$SCRIPT_DIR/backend" python run.py > ../logs/backend.log 2>&1 &
 BACKEND_PID=$!
@@ -131,7 +132,7 @@ cd ..
 
 # Wait for backend to start
 echo -e "${BLUE}      Waiting for backend to initialize...${NC}"
-sleep 3
+sleep 5
 
 # Check if backend is running
 if ps -p $BACKEND_PID > /dev/null; then

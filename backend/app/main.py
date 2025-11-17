@@ -21,10 +21,9 @@ async def lifespan(app: FastAPI):
         except ImportError:
             logger.info("ℹ No database configured")
         
-        # Pre-load AI model
-        from app.models.ai_model import skin_model
-        skin_model._ensure_loaded()
-        logger.info(" AI model pre-loaded")
+        # Skip pre-loading AI model for faster startup
+        # Model will be lazy-loaded on first prediction request
+        logger.info("ℹ AI model will be loaded on first use (lazy loading)")
         
     except Exception as e:
         logger.error(f" Startup error: {e}")
